@@ -9,20 +9,26 @@ const app = express();
 
 /* Body Parser */
 const bodyParser = require('body-parser');
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Orign, X-Requested-With, Content-Type, Accept, Authorozation');
-    res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-
+     res.setHeader("Access-Control-Allow-Credentials", "true");
+ 
     next();
 })
 
 /* Routes handler */
 const itemsRoutes = require('./routes/items');
 app.use('/items', itemsRoutes);
+
+const usersRoutes = require('./routes/users');
+app.use('/users', usersRoutes);
+
+/* const path = require('path');
+app.use('/uploads/images/', express.static(path.join('uploads', 'images'))); */
 
 /* Erorr handler */
 app.use((req, res, next) => {
@@ -32,12 +38,14 @@ app.use((req, res, next) => {
     return next(new HttpError('Could not find this route', 404));
 });
 
+/* const fs = require("fs");
+ */
 app.use((error, req, res, next) => {
-    if(req.file){
+/*     if(req.file){
         fs.unlink(req.file.path, (e =>{
             console.log(e);
         }));
-    }
+    } */
 
     if (res.headerSent) {
         return next(error);

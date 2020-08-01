@@ -45,14 +45,14 @@ const AddNewItem = async (req, res, next) => {
 };
 
 const deleteItemById = async (req, res, next) => {
-    const itemId = req.params._id;
+    const itemId = req.params.id;
     try {
         const item = await Item.findById(itemId);
         if(!item){
             return next(new HttpError('Could not find item for this id.', 404));
         }
         await item.remove();
-        res.status(200).json({ message: 'Deleted item.' });
+        res.status(200).json({item});
     } catch (error) {
         console.log(error);
         return next(new HttpError('Something went wrong, could not delete this item', 500));

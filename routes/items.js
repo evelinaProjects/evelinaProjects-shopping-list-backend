@@ -13,5 +13,5 @@ router.get('/', getAllitems);
 
 router.post('/', [check('title').not().isEmpty()], AddNewItem)
 
-router.delete('/:_id', deleteItemById)
+router.delete('/:id', deleteItemById)
 module.exports = router;
