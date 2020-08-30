@@ -4,16 +4,15 @@ const router = express.Router()
 const { check } = require('express-validator');
 
 const {
-    sigin,
+    signin,
     signup,
     getAllUsers,
 } = require('../controllers/users')
 
 router.get('/', getAllUsers);
 
-
 router.post('/signup',
-    [check('name').not().isEmpty(),
+    [check('username').not().isEmpty(),
     check('email').normalizeEmail().isEmail(),
     check('password').not().isEmpty()], 
     signup);
@@ -21,7 +20,9 @@ router.post('/signup',
 router.post('/signin',
     [check('email').normalizeEmail().isEmail(),
     check('password').not().isEmpty()], 
-    sigin);
+    signin);
+
+
 
 
 

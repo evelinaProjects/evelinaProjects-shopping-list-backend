@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const HttpError = require('../models/HttpError');
 const User = require('../models/user');
@@ -10,7 +12,6 @@ cloudinary.config({
     api_key: process.env.API_KEY,
     api_secret: process.env.API_SECRET
 });
-
 
 
 const getAllUsers = async (req, res, next) => {
@@ -29,7 +30,9 @@ const signup = async (req, res, next) => {
         return next(new HttpError('Invalid inputs passed, Please cheack your data', 422));
     }
 
-    const { name = '', email = '', password = '' } = req.body;
+    const { username = '', email = '', password = '' } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 8);
+
     let image = '';
     try {
         const hasMail = await User.findOne({ email })
@@ -41,18 +44,24 @@ const signup = async (req, res, next) => {
             image = uploadResponse.url;
         }
         const newUser = new User({
-            name,
+            username,
             image,
             email,
-            password,
+            password: hashedPassword,
+            Lists: []
         });
         await newUser.save();
-
+        const token = jwt.sign(
+            { userId: newUser._id, email: newUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
         res.status(201).json({
             user: {
-                name: newUser.name,
-                email: newUser.email,
-                image: newUser.image
+                id: newUser._id,
+                username: newUser.username,
+                image: newUser.image,
+                token
             }
         });
     } catch (error) {
@@ -61,7 +70,7 @@ const signup = async (req, res, next) => {
     }
 };
 
-const sigin = async (req, res, next) => {
+const signin = async (req, res, next) => {
     const e = validationResult(req);
     if (e.errors.length > 0) {
         console.log(e);
@@ -74,18 +83,23 @@ const sigin = async (req, res, next) => {
         if (!identifiedUser) {
             return next(new HttpError('invalid credentials, could not log you in.', 403));
         }
-        const isValidPassword = identifiedUser.password === password ;
-/*         const isValidPassword = await bcrypt.compare(password, identifiedUser.password);
- */        if (!isValidPassword) {
+        const isValidPassword = await bcrypt.compare(password, identifiedUser.password);
+        if (!isValidPassword) {
             return next(new HttpError('invalid credentials, could not log you in.', 403));
         }
-/*         const token = jwt.sign(
+        const token = jwt.sign(
             { userId: identifiedUser._id, email: identifiedUser.email },
-            'secret',
+            process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
-        res.json({ userId: identifiedUser._id, email: identifiedUser.email, token: token }); */
-        res.json({user: { userId: identifiedUser._id, email: identifiedUser.email }}); 
+
+        res.json({user: {
+                id: identifiedUser._id,
+                username: identifiedUser.username,
+                image: identifiedUser.image,
+                token: token 
+            }
+        }); 
 
     } catch (error) {
         return next(new HttpError('Logging in failed, please try again later.', 500));
@@ -93,7 +107,7 @@ const sigin = async (req, res, next) => {
 };
 
 module.exports = {
-    sigin,
+    signin,
     signup,
     getAllUsers,
 }

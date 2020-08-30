@@ -15,14 +15,13 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Orign, X-Requested-With, Content-Type, Accept, Authorozation');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-     res.setHeader("Access-Control-Allow-Credentials", "true");
- 
+    res.setHeader("Access-Control-Allow-Credentials", "true");
     next();
 })
 
 /* Routes handler */
-const itemsRoutes = require('./routes/items');
-app.use('/items', itemsRoutes);
+const listsRoutes = require('./routes/lists');
+app.use('/lists', listsRoutes);
 
 const usersRoutes = require('./routes/users');
 app.use('/users', usersRoutes);
@@ -38,15 +37,8 @@ app.use((req, res, next) => {
     return next(new HttpError('Could not find this route', 404));
 });
 
-/* const fs = require("fs");
- */
-app.use((error, req, res, next) => {
-/*     if(req.file){
-        fs.unlink(req.file.path, (e =>{
-            console.log(e);
-        }));
-    } */
 
+app.use((error, req, res, next) => {
     if (res.headerSent) {
         return next(error);
     }
@@ -59,7 +51,8 @@ const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useCreateIndex: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
 }, () => {
     try {
         app.listen(process.env.PORT || 3001 , () => {
